@@ -93,44 +93,116 @@
 <script src="JsBarcode.all.min.js"></script>
 <script src="jquery-3.7.1.min.js"></script>
 <script>
-var counter = 0;
-	function generateBarCode(){
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+function removeItemOnce(arr, value) {
+  var index = arr.indexOf(value);
+  if (index > -1) {
+    arr.splice(index, 1);
+  }
+  return arr;
+};
 
+function input_removal(inputa, removala){
+    var diff=[];
+    for (let i in inputa){
+        if(!removala.includes(inputa[i])){
+            diff.push(inputa[i]);
+        };
+    };
+    return diff;
+};
+//This removes currently existing values from the input array inputa
 
-	var returncodes = document.getElementById("returncodes").value;
-    var returncodesarray = returncodes.match(/[^\s]+/g);
-    for (let x in returncodesarray){
-    	counter++;
-    	let div = document.createElement("div");
-    	let rc=returncodesarray[x];
-    	rc=rc
-    	let divid = 'id'+rc+counter;
-    	//fucking #s and strings lol prefix "id" to force all to string
-        div.id = divid;
-        div.className = "column";
+var counter = 0; //counter initialize, this is used to let each button properly close each row
+var returncodesarray=[]; //returncodes array initialize, this is used to append and remove dupes
+var currentarray=[]; //current array initialize, this is used to append and remove dupes
+var inputarray=[];
+function generateBarCode(){
 
-        let barcodeid='id'+divid+counter;
-        let innerhtml=rc+'<img id="'+barcodeid+'"/>'
-        
-        div.innerHTML=innerhtml + '<img id="barcode"/>';
-        var element = document.createElement("button");
-        element.appendChild(document.createTextNode("x delete"));
-        let eleid='id'+divid+'button'+counter;
-        element.id=eleid;
-        element.className = "column";
-        element.style.width="100px";
-        element.style.height="100px";
-     	element.innerHTML = '<img src="x.png" />';
-    	let rowadder = document.createElement("div");
-    	rowadder.className="row";
+    	var returncodesinput = document.getElementById("returncodes").value;
 
-        document.body.appendChild(rowadder);
-        document.body.appendChild(element);
-    	document.body.appendChild(div);  
-    	document.getElementById(eleid).addEventListener('click', 
-			function(e) {    e.preventDefault();    this.style.display = 'none'; this.nextElementSibling.style.display = 'none';}, false);
-		JsBarcode("#"+barcodeid, rc);
-	   	};
+        returncodesinput = returncodesinput.replaceAll('|','l');
+        returncodesinput = returncodesinput.replace(/[^A-Za-z0-9\s]/g, '');
+        //matches ^NOT LETter or # or space with nothing, to reduce errors
+        //of course this means the code probably wont work
+        // const re = /[^\s]+/g;
+        // literal/type matching[] not^ space\s extend+ casesensitive/g?
+        //var returncodesarray = returncodesinput.match(/[^\s]+/g);
+        //this was the old method, but created dupes.  
+        //now we append and then remove dupes, but also need to pop out values on button pushes.
+        inputarray=returncodesinput.match(/[^\s]+/g);
+        // let difference = inputarray.diff(returncodesarray); //filter out differences
+
+        if(inputarray){
+            inputarray = inputarray.filter(function(elem, index, self) {return index === self.indexOf(elem);});
+            returncodesarray = returncodesarray.concat(inputarray);
+            if(currentarray){
+                returncodesarray=input_removal(returncodesarray,currentarray);
+            };
+        };
+
+        // console.log(returncodesarray);
+
+    
+        // var returncodesarray = inputarray;
+        if(returncodesarray){
+            returncodesarray = returncodesarray.filter(function(elem, index, self) {return index === self.indexOf(elem);});
+            //removes duplicates
+            currentarray=currentarray.concat(returncodesarray);
+            currentarray = currentarray.filter(function(elem, index, self) {return index === self.indexOf(elem);});
+            for (let x in returncodesarray){
+            	counter++;
+            	let div = document.createElement("div");
+            	let rc=returncodesarray[x];
+            	rc=rc
+            	let divid = 'id'+rc+counter;
+            	//fucking #s and strings lol prefix "id" to force all to string
+                div.id = divid;
+                div.value=rc;
+                div.className = "column";
+                let barcodeid='id'+divid+counter;
+                let innerhtml=rc+'<img id="'+barcodeid+'"/>'+
+                    '<br><br><br><br><br><br><br><br>';
+                div.innerHTML=innerhtml + '<img id="barcode"/>';
+                var element = document.createElement("button");
+                element.appendChild(document.createTextNode("x delete"));
+                let eleid='id'+divid+'button'+counter;
+                element.id=eleid;
+                element.className = "column";
+                element.style.width="100px";
+                element.style.height="100px";
+             	// element.innerHTML = '<img src="x.png"  height="88" width="88" />';
+                element.innerHTML = '<img src="x'+
+                    getRandomInt(1,14)+
+                    '.gif"  height="88" width="88" />';
+                //getrandomint(file1 , file last#)
+            	let rowadder = document.createElement("div");
+            	rowadder.className="row";
+
+                document.body.appendChild(rowadder);
+                document.body.appendChild(element);
+            	document.body.appendChild(div);  
+            	document.getElementById(eleid).addEventListener('click', 
+        			function(e) {    e.preventDefault();    this.style.display = 'none'; 
+                    this.nextElementSibling.style.display = 'none';
+                    // console.log(this.nextElementSibling.value);
+                    removeItemOnce(currentarray, this.nextElementSibling.value);
+                    }, false);
+                //this event clears the barcode by displaying nothing
+        		JsBarcode("#"+barcodeid, rc);
+
+        	   	};
+           };
+        returncodesarray=[];
+        document.getElementById('returncodes').value = ''
+        //resets input after loops
+        returncodesinput=null; //input field data served its purpose now.
+        inputarray=[];
+
 	};
 	
 
